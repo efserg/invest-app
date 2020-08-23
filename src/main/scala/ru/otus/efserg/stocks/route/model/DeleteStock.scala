@@ -8,6 +8,8 @@ object DeleteStockResponse {
 
   case class Deleted(ticker: String) extends DeleteStockResponse
 
-  case class NotFound(ticker: String) extends DeleteStockResponse
+  case class NotFound(message: String) extends DeleteStockResponse
+
+  case class Failed(reason: String) extends DeleteStockResponse
 
 }

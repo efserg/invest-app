@@ -1,14 +1,13 @@
 package ru.otus.efserg.stocks.route.model
 
-import java.time.LocalDateTime
-
 import ru.otus.efserg.stocks.dao.ID
+import ru.otus.efserg.stocks.dao.model.Deal
 
 sealed trait UpdateDealRequest
 
 object UpdateDealRequest {
 
-  case class Update(id: ID, ticker: String, price: BigDecimal, quantity: Long, commission: BigDecimal, time: LocalDateTime)
+  case class Update(id: ID, deal: Deal)
 
 }
 
@@ -16,7 +15,7 @@ sealed trait UpdateDealResponse
 
 object UpdateDealResponse {
 
-  case class Updated(id: ID, ticker: String, price: BigDecimal, quantity: Long, commission: BigDecimal, time: LocalDateTime) extends UpdateDealResponse
+  case class Updated(deal: Deal) extends UpdateDealResponse
 
   case class NotFound(id: ID) extends UpdateDealResponse
 

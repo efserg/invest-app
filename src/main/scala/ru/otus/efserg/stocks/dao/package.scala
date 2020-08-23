@@ -7,6 +7,4 @@ package object dao {
 
   def createId: ID = UUID.randomUUID()
 
-  implicit def createId(s: String): ID = UUID.fromString(s)
-
 }

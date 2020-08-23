@@ -1,13 +1,19 @@
 package ru.otus.efserg.stocks.route.model
 
-case class UpdateStockRequest(ticker: String, newTicker: String)
+import ru.otus.efserg.stocks.dao.model.Stock
+
+case class UpdateStockRequest(ticker: String, stock: Stock)
 
 sealed trait UpdateStockResponse
 
 object UpdateStockResponse {
 
-  case class Updated(ticker: String) extends UpdateStockResponse
+  case class Updated(stock: Stock) extends UpdateStockResponse
 
-  case class NotFound(ticker: String) extends UpdateStockResponse
+  case class NotFound(message: String) extends UpdateStockResponse
+
+  case class NotValid(message: String) extends UpdateStockResponse
+
+  case class Failed(message: String) extends UpdateStockResponse
 
 }

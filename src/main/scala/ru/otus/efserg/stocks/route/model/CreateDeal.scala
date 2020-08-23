@@ -2,7 +2,7 @@ package ru.otus.efserg.stocks.route.model
 
 import java.time.LocalDateTime
 
-import ru.otus.efserg.stocks.dao.ID
+import ru.otus.efserg.stocks.dao.model.Deal
 
 sealed trait CreateDealRequest
 
@@ -18,7 +18,7 @@ sealed trait CreateDealResponse
 
 object CreateDealResponse {
 
-  case class Created(id: ID) extends CreateDealResponse
+  case class Created(deal: Deal) extends CreateDealResponse
 
   case class ImpossibleDeal(reason: String) extends CreateDealResponse
 
