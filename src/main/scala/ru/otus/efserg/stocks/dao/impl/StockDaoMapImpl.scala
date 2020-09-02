@@ -1,8 +1,8 @@
 package ru.otus.efserg.stocks.dao.impl
 
-import ru.otus.efserg.stocks.{StockAlreadyExistException, StockNotFoundException, StockValidateException}
 import ru.otus.efserg.stocks.dao.StockDao
 import ru.otus.efserg.stocks.dao.model.Stock
+import ru.otus.efserg.stocks.{StockAlreadyExistException, StockNotFoundException, StockValidateException}
 
 import scala.util.{Failure, Success, Try}
 

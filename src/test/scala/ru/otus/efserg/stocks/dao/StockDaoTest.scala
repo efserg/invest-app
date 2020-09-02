@@ -4,26 +4,33 @@ import org.scalacheck.Gen
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers._
 import org.scalatestplus.scalacheck.ScalaCheckDrivenPropertyChecks
-import ru.otus.efserg.stocks.dao.model.Stock
-import ru.otus.efserg.stocks.{StockAlreadyExistException, StockNotFoundException, StockValidateException}
+import ru.otus.efserg.stocks.dao.model.{Currency, Stock}
+import ru.otus.efserg.stocks.{
+  StockAlreadyExistException,
+  StockNotFoundException,
+  StockValidateException
+}
 
 import scala.util.{Failure, Success}
 
 abstract class StockDaoTest(name: String, createDao: () => StockDao)
-  extends AnyFreeSpec
+    extends AnyFreeSpec
     with ScalaCheckDrivenPropertyChecks {
 
   private val regex = "[A-Z]+".r
-
   private val validTicker: Gen[String] = Gen.alphaUpperStr.suchThat(!_.isEmpty)
+  private val curr: Gen[Currency] =
+    Gen.oneOf(Currency.EUR, Currency.USD, Currency.RUB)
 
   val validStock: Gen[Stock] = for {
     ticker <- validTicker
-  } yield Stock(ticker)
+    currency <- curr
+  } yield Stock(ticker, currency)
 
   val invalidStock: Gen[Stock] = for {
     ticker <- Gen.alphaNumStr.suchThat(!regex.matches(_))
-  } yield Stock(ticker)
+    currency <- curr
+  } yield Stock(ticker, currency)
 
   name - {
     "create" - {
@@ -40,7 +47,12 @@ abstract class StockDaoTest(name: String, createDao: () => StockDao)
         forAll(invalidStock) { stock =>
           val dao = createDao()
           val createdStock = dao.create(stock)
-          createdStock shouldBe Failure(StockValidateException(stock.ticker, "Ticker must contain only upper case letters"))
+          createdStock shouldBe Failure(
+            StockValidateException(
+              stock.ticker,
+              "Ticker must contain only upper case letters"
+            )
+          )
         }
       }
 
@@ -50,7 +62,9 @@ abstract class StockDaoTest(name: String, createDao: () => StockDao)
           val createdStock = dao.create(stock)
           val alreadyCreatedStock = dao.create(stock)
           createdStock shouldBe Success(stock)
-          alreadyCreatedStock shouldBe Failure(StockAlreadyExistException(stock.ticker))
+          alreadyCreatedStock shouldBe Failure(
+            StockAlreadyExistException(stock.ticker)
+          )
         }
       }
     }
@@ -76,8 +90,8 @@ abstract class StockDaoTest(name: String, createDao: () => StockDao)
       "delete known stock" in {
         forAll(validStock) { stock =>
           val dao = createDao()
-          dao.create(stock)
-          dao.get(stock.ticker) shouldBe Success(stock)
+          val created = dao.create(stock)
+          created shouldBe Success(stock)
           dao.delete(stock.ticker) shouldBe Success(stock)
           dao.get(stock.ticker) shouldBe Failure(StockNotFoundException(stock.ticker))
         }
@@ -90,5 +104,12 @@ abstract class StockDaoTest(name: String, createDao: () => StockDao)
         }
       }
     }
-  }
+
+      "update unknown stock" in {
+        forAll(validTicker) { ticker =>
+          val dao = createDao()
+          dao.update(ticker, Stock("AAPL", Currency.USD)) shouldBe Failure(StockNotFoundException("AAPL"))
+        }
+      }
+    }
 }
