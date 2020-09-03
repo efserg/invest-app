@@ -1,14 +1,14 @@
 package ru.otus.efserg.stocks.service.impl
 
-import ru.otus.efserg.stocks.{DealNotFoundException, DealValidateException}
-import ru.otus.efserg.stocks.dao.{DealDao, ID}
+import ru.otus.efserg.stocks.{DealNotFoundException, DealValidateException, UserNotFoundException}
+import ru.otus.efserg.stocks.dao.{DealDao, ID, UserDao}
 import ru.otus.efserg.stocks.dao.model.Deal
 import ru.otus.efserg.stocks.route.model._
 import ru.otus.efserg.stocks.service.DealService
 
 import scala.util.{Failure, Success}
 
-class DealServiceImpl(dao: DealDao) extends DealService {
+class DealServiceImpl(dao: DealDao, userDao: UserDao) extends DealService {
 
   override def get(request: GetDealRequest): GetDealResponse =
     dao.get(request.id) match {
@@ -51,12 +51,32 @@ class DealServiceImpl(dao: DealDao) extends DealService {
           case _ => UpdateDealResponse.Failed(ex.getMessage)
         }
     }
+
   override def create(request: CreateDealRequest): CreateDealResponse =
-    dao.create(Deal(request.ticker, request.price, request.quantity, request.commission, request.time)) match {
-      case Success(d) => CreateDealResponse.Created(d)
-      case Failure(ex) => ex match {
-          case _: DealValidateException => CreateDealResponse.ImpossibleDeal(ex.getMessage)
-          case _ => CreateDealResponse.Failed(ex.getMessage)
+    userDao.get(request.userId) match {
+      case Failure(ex) =>
+        ex match {
+        case _: UserNotFoundException =>
+            CreateDealResponse.UserNotFound(ex.getMessage)
+      }
+      case Success(_) =>
+        dao.create(
+          Deal(
+            request.ticker,
+            request.price,
+            request.quantity,
+            request.commission,
+            request.time,
+            request.userId
+          )
+        ) match {
+          case Success(d) => CreateDealResponse.Created(d)
+          case Failure(ex) =>
+            ex match {
+              case _: DealValidateException =>
+                CreateDealResponse.ImpossibleDeal(ex.getMessage)
+              case _ => CreateDealResponse.Failed(ex.getMessage)
+            }
         }
     }
 }

@@ -18,3 +18,10 @@ case class DealCreateException(id: ID, reason: String) extends Exception(s"Deal 
 case class DealAlreadyExistException(id: ID) extends Exception(s"Deal with id $id already exists")
 
 case class DealValidateException(id: ID, reason: String) extends Exception(s"Deal with id $id was not valid. Reason: '$reason'")
+
+case class UserNotFoundException(id: ID) extends Exception(s"User with id $id was not found")
+
+case class UserAlreadyExistException(id: ID) extends Exception(s"User with id $id already exists")
+
+case class UserValidateException(email: String) extends Exception(s"Invalid email: $email")
+

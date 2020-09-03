@@ -1,8 +1,8 @@
 package ru.otus.efserg.stocks.dao.impl
 
-import ru.otus.efserg.stocks.{DealAlreadyExistException, DealNotExistException, DealNotFoundException, dao}
-import ru.otus.efserg.stocks.dao.{DealDao, ID}
 import ru.otus.efserg.stocks.dao.model.Deal
+import ru.otus.efserg.stocks.dao.{DealDao, ID}
+import ru.otus.efserg.stocks.{DealAlreadyExistException, DealNotFoundException, dao}
 
 import scala.util.{Failure, Success, Try}
 
