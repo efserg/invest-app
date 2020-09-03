@@ -12,14 +12,13 @@ class StockDaoMapImpl extends StockDao {
 
   private val validTickerRegex = "[A-Z]+".r
 
-  override def create(stock: Stock): Try[Stock] = {
+  override def create(stock: Stock): Try[Stock] =
     validate(stock, Seq(isExistAlready, isValidTicker)) match {
       case Success(v) =>
         db += (v.ticker -> v)
         Success(v)
-      case f@Failure(_) => f
+      case f @ Failure(_) => f
     }
-  }
 
   override def get(ticker: String): Try[Stock] =
     db.get(ticker) match {
@@ -48,7 +47,7 @@ class StockDaoMapImpl extends StockDao {
   private def isExist(stock: Stock): Try[Stock] =
     get(stock.ticker) match {
       case Failure(_) => Failure(StockNotFoundException(stock.ticker))
-      case f@Failure(_) => f
+      case _ => Success(stock)
     }
 
   private def isExistAlready(stock: Stock): Try[Stock] =

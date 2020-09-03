@@ -1,8 +1,8 @@
 package ru.otus.efserg.stocks.route.model
 
-import ru.otus.efserg.stocks.dao.model.Stock
+import ru.otus.efserg.stocks.dao.model.{Currency, Stock}
 
-case class CreateStockRequest(stock: Stock)
+case class CreateStockRequest(ticker: String, currency: Currency)
 
 sealed trait CreateStockResponse
 

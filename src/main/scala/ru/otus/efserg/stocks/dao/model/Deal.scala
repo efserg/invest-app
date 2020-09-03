@@ -4,12 +4,16 @@ import java.time.LocalDateTime
 
 import ru.otus.efserg.stocks.dao._
 
-case class Deal(id: Option[ID], ticker: String, price: BigDecimal, quantity: Long, commission: BigDecimal, time: LocalDateTime)
+case class Deal(id: ID, ticker: String, price: BigDecimal, quantity: Long, commission: BigDecimal, time: LocalDateTime)
 
 object Deal {
-  val brokerInterest = BigDecimal(0.0005)
+  private val brokerInterest = BigDecimal(0.0005)
+  private val minInterest = BigDecimal(0.01)
 
-  def apply(ticker: String, price: BigDecimal, quantity: Long, commission: BigDecimal): Deal = Deal(Some(createId), ticker, price, quantity, commission, LocalDateTime.now)
+  def apply(ticker: String, price: BigDecimal, quantity: Long, commission: Option[BigDecimal], time: Option[LocalDateTime]): Deal = Deal(createId, ticker, price, quantity, commission.getOrElse(interest(price, quantity)), time.getOrElse(LocalDateTime.now()))
 
-  def apply(ticker: String, price: BigDecimal, quantity: Long): Deal = Deal(ticker, price, quantity, brokerInterest * price * quantity)
+  private def interest(price: BigDecimal, quantity: Long) = {
+    val interest = brokerInterest * price * quantity
+    if (interest < minInterest) minInterest else interest
+  }
 }

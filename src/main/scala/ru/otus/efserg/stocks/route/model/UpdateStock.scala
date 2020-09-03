@@ -1,8 +1,8 @@
 package ru.otus.efserg.stocks.route.model
 
-import ru.otus.efserg.stocks.dao.model.Stock
+import ru.otus.efserg.stocks.dao.model.{Currency, Stock}
 
-case class UpdateStockRequest(ticker: String, stock: Stock)
+case class UpdateStockRequest(ticker: String, currency: Currency)
 
 sealed trait UpdateStockResponse
 
