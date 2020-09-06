@@ -2,21 +2,25 @@ package ru.otus.efserg.stocks.service.impl
 import java.time.LocalDateTime
 
 import ru.otus.efserg.stocks.dao.model.Deal
-import ru.otus.efserg.stocks.dao.{DealDao, StockDao, UserDao}
+import ru.otus.efserg.stocks.dao.{DealDao, StockDao}
 import ru.otus.efserg.stocks.route.model.{
-  StockSummary, StatisticsResponse, UserStatisticsRequest}
+  StatisticsRequest,
+  StatisticsResponse,
+  StockSummary,
+  UserSummary
+}
 import ru.otus.efserg.stocks.service.StatisticService
 
-class StatisticServiceImpl(dealDao: DealDao)
+class StatisticServiceImpl(dealDao: DealDao, stockDao: StockDao)
     extends StatisticService {
 
   private val ZERO = BigDecimal(0)
 
-  override def stockSummary(
-    request: UserStatisticsRequest
+  override def userSummary(
+    request: StatisticsRequest.UserStatistics
   ): StatisticsResponse = {
 
-    val deals: Map[String, Seq[Deal]] = dealDao
+    val accumulatedDeals: Map[String, Seq[Accumulator]] = dealDao
       .find(
         d =>
           d.userId == request.userId &&
@@ -25,8 +29,7 @@ class StatisticServiceImpl(dealDao: DealDao)
       )
       .sortBy(_.time)
       .groupBy(d => d.ticker)
-
-    val accumulatedDeals: Map[String, Seq[Accumulator]] = deals.map({
+      .map({
         case (ticker: String, ds: Seq[Deal]) =>
           ticker -> ds
             .scanLeft(Accumulator(ticker, 0L, ZERO, ZERO, LocalDateTime.MIN))(
@@ -58,22 +61,54 @@ class StatisticServiceImpl(dealDao: DealDao)
       val moneyInTicker = openDeal.map(_.price).getOrElse(ZERO) -
         closeDeal.map(_.price).getOrElse(ZERO)
       val count = openDeal.map(_.quantity).getOrElse(0L)
-      StockSummary(
+      val stock = stockDao.get(ticker).get // todo: implement error handling
+      val currency = stock.currency
+
+      UserSummary(
         ticker,
         count,
         moneyInTicker,
         openDeal.map(_.commission).getOrElse(ZERO),
         moneyInTicker / count,
         closeDeal.map(_.time),
-        closeDeal.map(_.price)
+        closeDeal.map(_.price),
+        currency
       )
     })
     StatisticsResponse.UserStatistic(summary)
   }
 
+  override def stockSummary(
+    request: StatisticsRequest.StockStatistics
+  ): StatisticsResponse = {
+    val summary: Map[String, StockSummary] = dealDao
+      .find(
+        d =>
+          request.dateFrom.forall(_.isAfter(d.time)) &&
+            request.dateTo.forall(_.isBefore(d.time))
+      )
+      .groupBy(d => d.ticker)
+      .map({
+        case (ticker: String, ds: Seq[Deal]) =>
+          ticker -> StockSummary(
+            ticker,
+            ds.length,
+            ds.count(_.price > 0),
+            ds.count(_.price < 0),
+            ds.map(_.price.abs).max,
+            ds.map(_.price.abs).min,
+            ds.map(_.userId).distinct.length,
+            stockDao.get(ticker).get.currency // todo
+          )
+      })
+
+    StatisticsResponse.StockStatistic(summary.values)
+  }
+
   private case class Accumulator(ticker: String,
-                         quantity: Long,
-                         price: BigDecimal,
-                         commission: BigDecimal,
-                         time: LocalDateTime)
+                                 quantity: Long,
+                                 price: BigDecimal,
+                                 commission: BigDecimal,
+                                 time: LocalDateTime)
+
 }
